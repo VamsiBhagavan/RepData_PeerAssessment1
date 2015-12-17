@@ -1,15 +1,36 @@
+---
+title: "Reproducible Research - Assignment"
+author: "Vamsi"
+date: "December 16, 2015"
+output: 
+  html_document: 
+    keep_md: yes
+---
 
+## Reading the input file and creating a file by unselecting the rows with missing values
+```{r}
+library(caret)
 assignment = read.csv("activity.csv",header=TRUE)
 missingvalues = is.na(assignment)
 clean = subset(assignment,missingvalues == 'FALSE',select = steps:interval )
-
+```
+## Calculating Mean and median of Number of steps taken by daily
+```{r}
 SumDate <- aggregate(clean$steps,by = list(clean$date),FUN = sum)
 mean(SumDate$x)
 median(SumDate$x)
+```
+## Plotting the histogram for the number of steps taken daily
+```{r}
 hist(SumDate$x,col ="green")
-
+```
+## Plotting the average number of steps vs. interval
+```{r}
 meanInterval = aggregate(clean$steps,by = list(clean$interval),FUN = mean)
 qplot(meanInterval$Group.1,meanInterval$x,geom="line",xlab="interval",ylab="avg steps")
+```
+## Imputing missing values by calculating the average steps for different intervals
+```{r}
 test = assignment
 for (i in 1:nrow(test)){
   t1<- test[i,]
@@ -18,9 +39,17 @@ for (i in 1:nrow(test)){
   test$steps[i]=t2$x
 }
 }
+```
+## checking the mean and median of the number of steps taken daily after imputation
+```{r}
 SumDate_Imputed <- aggregate(test$steps,by = list(test$date),FUN = sum)
 hist(SumDate_Imputed$x,col="gray")
-
+mean(SumDate_Imputed$x)
+median(SumDate_Imputed$x)
+```
+### After Imputation calculated Mean and Median values are similar to those before imputation
+## Activity Patterns during Weekdays and Weekends
+```{r}
 test$date <- as.Date(test$date, format = "%Y-%m-%d")
 test$weekdays <- weekdays(test$date)
 
@@ -33,7 +62,8 @@ for (i in 1:nrow(test)){
     test$weekend[i] = 100
   }
 }
-
 join <- aggregate(test$steps,by = list(test$interval,test$weekend), FUN = mean)
 colnames(join)=c("interval","Weekday","Avgsteps")
 xyplot(Avgsteps ~ interval| Weekday, data=join, layout =c(1,2),type='l')
+```
+
